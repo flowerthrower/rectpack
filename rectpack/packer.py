@@ -104,23 +104,21 @@ class PackerBNFMixin(object):
     doesn't fit, close the current bin and go to the next.
     """
 
-    def add_rect(self, width, height, rid=None):
+    def add_rect(self, width, height, rid=None, priority=None):
         while True:
-            # if there are no open bins, try to open a new one
-            if len(self._open_bins)==0:
-                # can we find an unopened bin that will hold this rect?
-                new_bin = self._new_open_bin(width, height, rid=rid)
-                if new_bin is None:
-                    return None
+            if len(self._open_priority_bins[priority])==0:
+                # Could not find an open bin -> open a new bin that's big enough
+                self.add_bin(self.max_width, height, count=1, priority=priority)
+                new_bin = self._new_open_bin(width, height, rid=rid, priority=priority)
 
             # we have at least one open bin, so check if it can hold this rect
-            rect = self._open_bins[0].add_rect(width, height, rid=rid)
+            rect = self._open_priority_bins[priority][0].add_rect(width, height, rid=rid)
             if rect is not None:
                 return rect
 
             # since the rect doesn't fit, close this bin and try again
-            closed_bin = self._open_bins.popleft()
-            self._closed_bins.append(closed_bin)
+            closed_bin = self._open_priority_bins[priority].popleft()
+            self._closed_priority_bins[priority].append(closed_bin)
 
 
 class PackerBFFMixin(object):
@@ -190,8 +188,9 @@ class PackerOnline(object):
         self.reset()
 
     def __iter__(self):
-        return itertools.chain.from_iterable(self._closed_priority_bins.values(), self._open_priority_bins.values())
-
+        return itertools.chain.from_iterable(
+            itertools.chain(self._closed_priority_bins.values(), self._open_priority_bins.values())
+        )
     def __len__(self):
         return sum(len(bins) for bins in self._closed_priority_bins.values()) + sum(len(bins) for bins in self._open_priority_bins.values())
     
