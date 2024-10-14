@@ -1181,40 +1181,44 @@ class TestNewPacker(TestCase):
         for abin in p:
             self.assertEqual(abin.bid, None)
  
+class TestMyPacker(TestCase):
 
+    def test_BFF(self):
+        """Test newPacker return correct Packer when in online mode"""
+        p = packer.newPacker(mode=packer.PackingMode.Online,
+                bin_algo=packer.PackingBin.BFF)
+        p.max_width = 100
 
+        p.add_rect(10, 10)
+        p.add_rect(20, 20)
+        p.add_rect(30, 30)
+        assert len(p) == 3
 
+        p = packer.newPacker(mode=packer.PackingMode.Online,
+                bin_algo=packer.PackingBin.BFF)
+        p.max_width = 100
 
+        p.add_rect(30, 30)
+        p.add_rect(20, 20)
+        p.add_rect(10, 10)
+        assert len(p) == 1
 
+    def test_BBF(self):
+        """Test newPacker return correct Packer when in online mode"""
+        p = packer.newPacker(mode=packer.PackingMode.Online,
+                bin_algo=packer.PackingBin.BBF)
+        p.max_width = 100
 
+        p.add_rect(10, 10)
+        p.add_rect(20, 20)
+        p.add_rect(30, 30)
+        assert len(p) == 3
 
+        p = packer.newPacker(mode=packer.PackingMode.Online,
+                bin_algo=packer.PackingBin.BBF)
+        p.max_width = 100
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        p.add_rect(30, 30)
+        p.add_rect(20, 20)
+        p.add_rect(10, 10)
+        assert len(p) == 1
