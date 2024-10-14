@@ -131,14 +131,14 @@ class PackerBFFMixin(object):
  
     def add_rect(self, width, height, rid=None, priority=None):
         # see if this rect will fit in any of the open bins
-        for b in self._open_bins:
+        for b in self._open_priority_bins[priority]:
             rect = b.add_rect(width, height, rid=rid) # returns None if rect doesn't fit
             if rect is not None:
                 return rect
 
         # Could not find a fitting bin -> open a new bin that's big enough
-        self.add_bin(self.max_width, height, count=1)
-        new_bin = self._new_open_bin(width, height, rid=rid)
+        self.add_bin(self.max_width, height, count=1, priority=priority)
+        new_bin = self._new_open_bin(width, height, rid=rid, priority=priority)
 
         rect = new_bin.add_rect(width, height, rid=rid)
         return rect
@@ -156,7 +156,7 @@ class PackerBBFMixin(object):
     def add_rect(self, width, height, rid=None, priority=None):
  
         # Try packing into open bins
-        fit = ((b.fitness(width, height),  b) for b in self._open_bins)
+        fit = ((b.fitness(width, height),  b) for b in self._open_priority_bins[priority])
         fit = (b for b in fit if b[0] is not None)
         try:
             _, best_bin = min(fit, key=self.first_item)
@@ -166,8 +166,8 @@ class PackerBBFMixin(object):
             pass    
 
         # Could not find a fitting bin -> open a new bin that's big enough
-        self.add_bin(self.max_width, height, count=1)
-        new_bin = self._new_open_bin(width, height, rid=rid)
+        self.add_bin(self.max_width, height, count=1, priority=priority)
+        new_bin = self._new_open_bin(width, height, rid=rid, priority=priority)
 
         rect = new_bin.add_rect(width, height, rid=rid)
         return rect
@@ -186,15 +186,16 @@ class PackerOnline(object):
         """
         self._rotation = rotation
         self._pack_algo = pack_algo
+        self.max_priority = 3
         self.reset()
 
     def __iter__(self):
-        return itertools.chain(self._closed_bins, self._open_bins)
+        return itertools.chain.from_iterable(self._closed_priority_bins.values(), self._open_priority_bins.values())
 
     def __len__(self):
-        return len(self._closed_bins)+len(self._open_bins)
+        return sum(len(bins) for bins in self._closed_priority_bins.values()) + sum(len(bins) for bins in self._open_priority_bins.values())
     
-    def __getitem__(self, key):
+    def __getitem__(self, key, priority=None):
         """
         Return bin in selected position. (excluding empty bins)
         """
@@ -209,12 +210,12 @@ class PackerOnline(object):
         if not 0 <= key < size:
             raise IndexError("Index out of range")
         
-        if key < len(self._closed_bins):
-            return self._closed_bins[key]
+        if key < len(self._closed_priority_bins[priority]):
+            return self._closed_priority_bins[priority][key]
         else:
-            return self._open_bins[key-len(self._closed_bins)]
+            return self._open_priority_bins[priority][key-len(self._closed_priority_bins[priority])]
 
-    def _new_open_bin(self, width=None, height=None, rid=None):
+    def _new_open_bin(self, width=None, height=None, rid=None, priority=None):
         """
         Extract the next empty bin and append it to open bins
 
@@ -225,7 +226,7 @@ class PackerOnline(object):
         factories_to_delete = set() #
         new_bin = None
 
-        for key, binfac in self._empty_bins.items():
+        for key, binfac in self._empty_priority_bins[priority].items():
 
             # Only return the new bin if the rect fits.
             # (If width or height is None, caller doesn't know the size.)
@@ -236,7 +237,7 @@ class PackerOnline(object):
             new_bin = binfac.new_bin()
             if new_bin is None:
                 continue
-            self._open_bins.append(new_bin)
+            self._open_priority_bins[priority].append(new_bin)
 
             # If the factory was depleted mark for deletion
             if binfac.is_empty():
@@ -246,15 +247,15 @@ class PackerOnline(object):
 
         # Delete marked factories
         for f in factories_to_delete:
-            del self._empty_bins[f]
+            del self._empty_priority_bins[priority][f]
 
         return new_bin 
 
-    def add_bin(self, width, height, count=1, **kwargs):
+    def add_bin(self, width, height, count=1, priority=None, **kwargs):
         # accept the same parameters as PackingAlgorithm objects
         kwargs['rot'] = self._rotation
         bin_factory = BinFactory(width, height, count, self._pack_algo, **kwargs)
-        self._empty_bins[next(self._bin_count)] = bin_factory
+        self._empty_priority_bins[priority][next(self._priority_bin_count[priority])] = bin_factory
 
     def rect_list(self):
         rectangles = []
@@ -280,14 +281,14 @@ class PackerOnline(object):
 
     def reset(self): 
         # Bins fully packed and closed.
-        self._closed_bins = collections.deque()
+        self._closed_priority_bins = {prio: collections.deque() for prio in range(self.max_priority)}
 
         # Bins ready to pack rectangles
-        self._open_bins = collections.deque()
+        self._open_priority_bins = {prio: collections.deque() for prio in range(self.max_priority)}
 
         # User provided bins not in current use
-        self._empty_bins = collections.OrderedDict() # O(1) deletion of arbitrary elem
-        self._bin_count = itertools.count()
+        self._empty_priority_bins = {prio: collections.OrderedDict() for prio in range(self.max_priority)}
+        self._priority_bin_count = {prio: itertools.count() for prio in range(self.max_priority)}
 
 
 class Packer(PackerOnline):

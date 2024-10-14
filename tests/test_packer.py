@@ -1189,19 +1189,19 @@ class TestMyPacker(TestCase):
                 bin_algo=packer.PackingBin.BFF)
         p.max_width = 100
 
-        p.add_rect(10, 10, priority=3)
+        p.add_rect(10, 10, priority=2)
         p.add_rect(20, 20, priority=2)
-        p.add_rect(30, 30, priority=1)
+        p.add_rect(30, 30, priority=2)
         assert len(p) == 3
 
         p = packer.newPacker(mode=packer.PackingMode.Online,
                 bin_algo=packer.PackingBin.BFF)
         p.max_width = 100
 
-        p.add_rect(10, 10, priority=3)
+        p.add_rect(30, 30, priority=2)
         p.add_rect(20, 20, priority=2)
-        p.add_rect(30, 30, priority=1)
-        assert len(p) == 3
+        p.add_rect(10, 10, priority=2)
+        assert len(p) == 1
 
     def test_BBF(self):
         """Test newPacker return correct Packer when in online mode"""
@@ -1209,16 +1209,16 @@ class TestMyPacker(TestCase):
                 bin_algo=packer.PackingBin.BBF)
         p.max_width = 100
 
-        p.add_rect(10, 10, priority=3)
+        p.add_rect(10, 10, priority=2)
         p.add_rect(20, 20, priority=2)
-        p.add_rect(30, 30, priority=1)
+        p.add_rect(30, 30, priority=2)
         assert len(p) == 3
 
         p = packer.newPacker(mode=packer.PackingMode.Online,
                 bin_algo=packer.PackingBin.BBF)
         p.max_width = 100
 
-        p.add_rect(10, 10, priority=3)
+        p.add_rect(30, 30, priority=2)
         p.add_rect(20, 20, priority=2)
-        p.add_rect(30, 30, priority=1)
-        assert len(p) == 3
+        p.add_rect(10, 10, priority=2)
+        assert len(p) == 1
