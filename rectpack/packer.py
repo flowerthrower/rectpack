@@ -146,24 +146,49 @@ class PriorityBinSet:
 
         return None  # No suitable bin found for this priority level
 
+class PackerBNFMixin(object):
+    """
+    BNF (Bin Next Fit): Only one open bin at a time.  If the rectangle
+    doesn't fit, close the current bin and go to the next.
+    """
 
-class PackerBFFMixinWithPriority:
+    def add_rect(self, width, height, rid=None):
+        while True:
+            # if there are no open bins, try to open a new one
+            if len(self._open_bins)==0:
+                # can we find an unopened bin that will hold this rect?
+                new_bin = self._new_open_bin(width, height, rid=rid)
+                if new_bin is None:
+                    return None
+
+            # we have at least one open bin, so check if it can hold this rect
+            rect = self._open_bins[0].add_rect(width, height, rid=rid)
+            if rect is not None:
+                return rect
+
+            # since the rect doesn't fit, close this bin and try again
+            closed_bin = self._open_bins.popleft()
+            self._closed_bins.append(closed_bin)
+
+
+
+class PriorityBinMixin:
     """
-    BFF (Bin First Fit) with priority-based bin sets.
+    Mixin for managing multiple sets of bins with priorities.
     """
-    def __init__(self, max_width):
-        self.max_width = max_width
-        self.priority_bin_set = PriorityBinSet()  # Use the priority-based bin set
+
+    def __init__(self):
+        self.priority_bin_set = PriorityBinSet()  # Initialize the priority-based bin manager
 
     def add_bin(self, priority, width, height, count=1, **kwargs):
         """
-        Add bins with a specific priority.
+        Add a bin factory to a specific priority.
         """
         self.priority_bin_set.add_bin_set(priority, width, height, count, **kwargs)
 
-    def add_rect(self, width, height, rid=None, priority=None):
+    def _get_or_open_bin(self, width, height, rid=None, priority=None):
         """
-        Add a rectangle to the appropriate bin set based on its priority.
+        Get an open bin based on the rectangle's priority or create a new bin if none fit.
         """
         if priority is None:
             priority = 1  # Default priority if not provided
@@ -176,24 +201,55 @@ class PackerBFFMixinWithPriority:
             self.add_bin(priority, self.max_width, height, count=1)
             new_bin = self.priority_bin_set.get_open_bin(width, height, priority)
 
+        return new_bin
+
+class PackerBFFMixin(PriorityBinMixin):
+    """
+    BFF (Bin First Fit): Pack rectangle in first bin it fits
+    """
+
+    max_width: int
+
+    def __init__(self):
+        super().__init__()
+
+    def add_rect(self, width, height, rid=None, priority=None):
+        """
+        Add a rectangle and place it in the first bin that fits, using priority-based bins.
+        """
+        for b in self._open_bins:
+            rect = b.add_rect(width, height, rid=rid)
+            if rect is not None:
+                return rect
+
+        # Could not find a fitting bin -> open or get a new bin that's big enough
+        new_bin = self._get_or_open_bin(width, height, rid=rid, priority=priority)
+
         rect = new_bin.add_rect(width, height, rid=rid)
         return rect
+    
 
-
-class PackerBBFMixin(object):
+    
+class PackerBBFMixin(PriorityBinMixin):
     """
-    BBF (Bin Best Fit): Pack rectangle in bin that gives best fitness
+    BBF (Bin Best Fit): Pack rectangle in bin that gives best fitness, using priority-based bins.
     """
 
     max_width: int
     # only create this getter once
     first_item = operator.itemgetter(0)
 
-    def add_rect(self, width, height, rid=None):
- 
+    def __init__(self):
+        super().__init__()
+
+    def add_rect(self, width, height, rid=None, priority=None):
+        """
+        Add a rectangle and place it in the best-fitting bin using priority-based bins.
+        """
         # Try packing into open bins
-        fit = ((b.fitness(width, height),  b) for b in self._open_bins)
+        fit = ((b.fitness(width, height), b) for b in self._open_bins)
         fit = (b for b in fit if b[0] is not None)
+        
         try:
             _, best_bin = min(fit, key=self.first_item)
             best_bin.add_rect(width, height, rid)
@@ -201,13 +257,11 @@ class PackerBBFMixin(object):
         except ValueError:
             pass    
 
-        # Could not find a fitting bin -> open a new bin that's big enough
-        self.add_bin(self.max_width, height, count=1)
-        new_bin = self._new_open_bin(width, height, rid=rid)
+        # Could not find a fitting bin -> open or get a new bin that's big enough
+        new_bin = self._get_or_open_bin(width, height, rid=rid, priority=priority)
 
         rect = new_bin.add_rect(width, height, rid=rid)
         return rect
-
 
 
 class PackerOnline(object):
