@@ -1188,7 +1188,8 @@ class TestMyPacker(TestCase):
         p = packer.newPacker(
             bin_algo=packer.PackingBin.BNF,
             mode=packer.PackingMode.Online,
-            max_width=100
+            max_priority=3,
+            max_width=100,
         )
 
         p.add_rect(10, 10, priority=2)
@@ -1199,7 +1200,8 @@ class TestMyPacker(TestCase):
         p = packer.newPacker(
             bin_algo=packer.PackingBin.BNF,
             mode=packer.PackingMode.Online,
-            max_width=100
+            max_priority=3,
+            max_width=100,
         )
 
         p.add_rect(30, 30, priority=2)
@@ -1212,7 +1214,8 @@ class TestMyPacker(TestCase):
         p = packer.newPacker(
             bin_algo=packer.PackingBin.BNF,
             mode=packer.PackingMode.Online,
-            max_width=100
+            max_priority=3,
+            max_width=100,
         )
 
         p.add_rect(10, 10, priority=2)
@@ -1223,7 +1226,8 @@ class TestMyPacker(TestCase):
         p = packer.newPacker(
             bin_algo=packer.PackingBin.BNF,
             mode=packer.PackingMode.Online,
-            max_width=100
+            max_priority=3,
+            max_width=100,
         )
 
         p.add_rect(30, 30, priority=2)
@@ -1236,7 +1240,8 @@ class TestMyPacker(TestCase):
         p = packer.newPacker(
             bin_algo=packer.PackingBin.BNF,
             mode=packer.PackingMode.Online,
-            max_width=100
+            max_priority=3,
+            max_width=100,
         )
 
         p.add_rect(10, 10, priority=2)
@@ -1247,7 +1252,8 @@ class TestMyPacker(TestCase):
         p = packer.newPacker(
             bin_algo=packer.PackingBin.BNF,
             mode=packer.PackingMode.Online,
-            max_width=100
+            max_priority=3,
+            max_width=100,
         )
 
         p.add_rect(30, 30, priority=2)
