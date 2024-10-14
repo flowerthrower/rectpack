@@ -1185,18 +1185,22 @@ class TestMyPacker(TestCase):
 
     def test_BFF(self):
         """Test newPacker return correct Packer when in online mode"""
-        p = packer.newPacker(mode=packer.PackingMode.Online,
-                bin_algo=packer.PackingBin.BFF)
-        p.max_width = 100
+        p = packer.newPacker(
+            bin_algo=packer.PackingBin.BNF,
+            mode=packer.PackingMode.Online,
+            max_width=100
+        )
 
         p.add_rect(10, 10, priority=2)
         p.add_rect(20, 20, priority=2)
         p.add_rect(30, 30, priority=2)
         assert len(p) == 3
 
-        p = packer.newPacker(mode=packer.PackingMode.Online,
-                bin_algo=packer.PackingBin.BFF)
-        p.max_width = 100
+        p = packer.newPacker(
+            bin_algo=packer.PackingBin.BNF,
+            mode=packer.PackingMode.Online,
+            max_width=100
+        )
 
         p.add_rect(30, 30, priority=2)
         p.add_rect(20, 20, priority=2)
@@ -1205,18 +1209,22 @@ class TestMyPacker(TestCase):
 
     def test_BNF(self):
         """Test newPacker return correct Packer when in online mode"""
-        p = packer.newPacker(mode=packer.PackingMode.Online,
-                bin_algo=packer.PackingBin.BFF)
-        p.max_width = 100
+        p = packer.newPacker(
+            bin_algo=packer.PackingBin.BNF,
+            mode=packer.PackingMode.Online,
+            max_width=100
+        )
 
         p.add_rect(10, 10, priority=2)
         p.add_rect(20, 20, priority=2)
         p.add_rect(30, 30, priority=2)
         assert len(p) == 3
 
-        p = packer.newPacker(mode=packer.PackingMode.Online,
-                bin_algo=packer.PackingBin.BNF)
-        p.max_width = 100
+        p = packer.newPacker(
+            bin_algo=packer.PackingBin.BNF,
+            mode=packer.PackingMode.Online,
+            max_width=100
+        )
 
         p.add_rect(30, 30, priority=2)
         p.add_rect(20, 20, priority=2)
@@ -1225,18 +1233,22 @@ class TestMyPacker(TestCase):
 
     def test_BBF(self):
         """Test newPacker return correct Packer when in online mode"""
-        p = packer.newPacker(mode=packer.PackingMode.Online,
-                bin_algo=packer.PackingBin.BBF)
-        p.max_width = 100
+        p = packer.newPacker(
+            bin_algo=packer.PackingBin.BNF,
+            mode=packer.PackingMode.Online,
+            max_width=100
+        )
 
         p.add_rect(10, 10, priority=2)
         p.add_rect(20, 20, priority=2)
         p.add_rect(30, 30, priority=2)
         assert len(p) == 3
 
-        p = packer.newPacker(mode=packer.PackingMode.Online,
-                bin_algo=packer.PackingBin.BBF)
-        p.max_width = 100
+        p = packer.newPacker(
+            bin_algo=packer.PackingBin.BNF,
+            mode=packer.PackingMode.Online,
+            max_width=100
+        )
 
         p.add_rect(30, 30, priority=2)
         p.add_rect(20, 20, priority=2)

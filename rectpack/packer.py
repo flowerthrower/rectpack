@@ -515,7 +515,8 @@ def newPacker(mode=PackingMode.Offline,
          bin_algo=PackingBin.BBF, 
         pack_algo=MaxRectsBssf,
         sort_algo=SORT_AREA, 
-        rotation=True):
+        rotation=True,
+        **kwargs):
     """
     Packer factory helper function
 
@@ -565,6 +566,9 @@ def newPacker(mode=PackingMode.Offline,
         return packer_class(pack_algo=pack_algo, sort_algo=sort_algo, 
             rotation=rotation)
     else:
-        return packer_class(pack_algo=pack_algo, rotation=rotation)
+        pc = packer_class(pack_algo=pack_algo, rotation=rotation)
+        for k, v in kwargs.items():
+            setattr(pc, k, v)
+        return pc
 
 
