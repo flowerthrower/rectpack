@@ -1186,10 +1186,11 @@ class TestMyPacker(TestCase):
     def test_BFF(self):
         """Test newPacker return correct Packer when in online mode"""
         p = packer.newPacker(
-            bin_algo=packer.PackingBin.BNF,
+            bin_algo=packer.PackingBin.BFF,
             mode=packer.PackingMode.Online,
             max_priority=3,
             max_width=100,
+            horizon=1,
         )
 
         p.add_rect(10, 10, priority=2)
@@ -1198,10 +1199,11 @@ class TestMyPacker(TestCase):
         assert len(p) == 3
 
         p = packer.newPacker(
-            bin_algo=packer.PackingBin.BNF,
+            bin_algo=packer.PackingBin.BFF,
             mode=packer.PackingMode.Online,
             max_priority=3,
             max_width=100,
+            horizon=1,
         )
 
         p.add_rect(30, 30, priority=2)
@@ -1216,6 +1218,7 @@ class TestMyPacker(TestCase):
             mode=packer.PackingMode.Online,
             max_priority=3,
             max_width=100,
+            horizon=1,
         )
 
         p.add_rect(10, 10, priority=2)
@@ -1228,6 +1231,7 @@ class TestMyPacker(TestCase):
             mode=packer.PackingMode.Online,
             max_priority=3,
             max_width=100,
+            horizon=1,
         )
 
         p.add_rect(30, 30, priority=2)
@@ -1238,22 +1242,24 @@ class TestMyPacker(TestCase):
     def test_BBF(self):
         """Test newPacker return correct Packer when in online mode"""
         p = packer.newPacker(
-            bin_algo=packer.PackingBin.BNF,
+            bin_algo=packer.PackingBin.BBF,
             mode=packer.PackingMode.Online,
             max_priority=3,
-            max_width=100,
+            max_width=10,
+            horizon=1,
         )
 
         p.add_rect(10, 10, priority=2)
-        p.add_rect(20, 20, priority=2)
-        p.add_rect(30, 30, priority=2)
+        p.add_rect(10, 20, priority=2)
+        p.add_rect(10, 30, priority=2)
         assert len(p) == 3
 
         p = packer.newPacker(
-            bin_algo=packer.PackingBin.BNF,
+            bin_algo=packer.PackingBin.BBF,
             mode=packer.PackingMode.Online,
             max_priority=3,
             max_width=100,
+            horizon=1,
         )
 
         p.add_rect(30, 30, priority=2)

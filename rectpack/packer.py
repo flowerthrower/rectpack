@@ -105,9 +105,10 @@ class PackerBNFMixin(object):
     """
     def add_rect(self, width, height, rid=None, priority=0):
         while True:
-            if len(self._open_bins[priority])==0:
-                # Could not find an open bin -> open a new bin that's big enough
-                self.add_bin(self._max_width, height, count=1, priority=priority)
+            if len(list(self._open_bins[priority])[-self._horizon:])==0:
+                # Could not find a fitting bin -> open a new bin that's big enough
+                new_height = self._max_depth if self._max_depth else height
+                self.add_bin(self._max_width, new_height, count=1, priority=priority)
                 new_bin = self._new_open_bin(width, height, rid=rid, priority=priority)
 
             # we have at least one open bin, so check if it can hold this rect
@@ -126,13 +127,14 @@ class PackerBFFMixin(object):
     """
     def add_rect(self, width, height, rid=None, priority=0):
         # see if this rect will fit in any of the open bins
-        for b in self._open_bins[priority]:
+        for b in list(self._open_bins[priority])[-self._horizon:]:
             rect = b.add_rect(width, height, rid=rid) # returns None if rect doesn't fit
             if rect is not None:
                 return rect
 
         # Could not find a fitting bin -> open a new bin that's big enough
-        self.add_bin(self._max_width, height, count=1, priority=priority)
+        new_height = self._max_depth if self._max_depth else height
+        self.add_bin(self._max_width, new_height, count=1, priority=priority)
         new_bin = self._new_open_bin(width, height, rid=rid, priority=priority)
 
         rect = new_bin.add_rect(width, height, rid=rid)
@@ -149,17 +151,19 @@ class PackerBBFMixin(object):
     def add_rect(self, width, height, rid=None, priority=0):
  
         # Try packing into open bins
-        fit = ((b.fitness(width, height),  b) for b in self._open_bins[priority])
+        fit = ((b.fitness(width, height),  b) for b in list(self._open_bins[priority])[-self._horizon:])
         fit = (b for b in fit if b[0] is not None)
         try:
             _, best_bin = min(fit, key=self.first_item)
             best_bin.add_rect(width, height, rid)
             return True
-        except ValueError:
-            pass    
+        except ValueError as e:
+            print(e)
+            pass
 
         # Could not find a fitting bin -> open a new bin that's big enough
-        self.add_bin(self._max_width, height, count=1, priority=priority)
+        new_height = self._max_depth if self._max_depth else height
+        self.add_bin(self._max_width, new_height, count=1, priority=priority)
         new_bin = self._new_open_bin(width, height, rid=rid, priority=priority)
 
         rect = new_bin.add_rect(width, height, rid=rid)
@@ -171,7 +175,7 @@ class PackerOnline(object):
     Rectangles are packed as soon are they are added
     """
 
-    def __init__(self, pack_algo=MaxRectsBssf, rotation=True, max_width=0, max_priority=1):
+    def __init__(self, pack_algo=MaxRectsBssf, rotation=True, max_depth=None, max_width=0, max_priority=1, horizon=int(1e8)):
         """
         Arguments:
             pack_algo (PackingAlgorithm): What packing algo to use
@@ -180,7 +184,9 @@ class PackerOnline(object):
         self._rotation = rotation
         self._pack_algo = pack_algo
         self._max_width = max_width
+        self._max_depth = max_depth
         self._max_priority = max_priority
+        self._horizon = horizon
         self.reset()
 
     def __iter__(self):
@@ -513,7 +519,9 @@ def newPacker(mode=PackingMode.Offline,
         sort_algo=SORT_AREA, 
         rotation=True,
         max_width=0,
-        max_priority=1):
+        max_depth=None,
+        max_priority=1,
+        horizon=int(1e8)):
     """
     Packer factory helper function
 
@@ -563,7 +571,7 @@ def newPacker(mode=PackingMode.Offline,
         return packer_class(pack_algo=pack_algo, sort_algo=sort_algo, 
             rotation=rotation)
     else:
-        return packer_class(pack_algo=pack_algo, rotation=rotation,
-                            max_width=max_width, max_priority=max_priority)
+        return packer_class(pack_algo=pack_algo, rotation=rotation, max_depth=max_depth,
+                            max_width=max_width, max_priority=max_priority, horizon=horizon)
 
 
